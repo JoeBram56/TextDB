@@ -1,6 +1,7 @@
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -12,6 +13,10 @@ public class TextDB {
     private TextDB() {
 
     }
+
+    private static String DATABASE = "database_binary.db";
+
+    public static Connection conn = null;
 
     //Holds drone data
     static class Drone {
@@ -94,6 +99,44 @@ public class TextDB {
         }
     }
 
+    /**
+     * Connects to the database if it exists, creates it if it does not, and
+     * returns the connection object.
+     *
+     * @param databaseFileName
+     *            the database file name
+     * @return a connection object to the designated database
+     */
+    public static Connection initializeDB(String databaseFileName) {
+        /**
+         * The "Connection String" or "Connection URL".
+         *
+         * "jdbc:sqlite:" is the "subprotocol". (If this were a SQL Server
+         * database it would be "jdbc:sqlserver:".)
+         */
+        String url = "jdbc:sqlite:" + databaseFileName;
+        Connection conn = null; // If you create this variable inside the Try block it will be out of scope
+        try {
+            conn = DriverManager.getConnection(url);
+            if (conn != null) {
+                // Provides some positive assurance the connection and/or creation was successful.
+                DatabaseMetaData meta = conn.getMetaData();
+                System.out
+                        .println("The driver name is " + meta.getDriverName());
+                System.out.println(
+                        "The connection to the database was successful.");
+            } else {
+                // Provides some feedback in case the connection failed but did not throw an exception.
+                System.out.println("Null Connection");
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            System.out
+                    .println("There was a problem connecting to the database.");
+        }
+        return conn;
+    }
+
     // Lists to store drones and equipment
     private static ArrayList<Drone> drones = new ArrayList<Drone>();
     private static ArrayList<Equipment> equipmentList = new ArrayList<Equipment>();
@@ -102,9 +145,7 @@ public class TextDB {
         Scanner scanner = new Scanner(System.in);
         int choice = 0;
         int user;
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rSet = null;
+        conn = initializeDB(DATABASE);
 
         System.out.print("Are you a customer or Employee?(1 - Emp/2 - Cust): ");
         user = scanner.nextInt();
@@ -197,6 +238,11 @@ public class TextDB {
             System.out.println("Need valid input");
             scanner.close();
             return;
+        }
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
         scanner.close();
     }
