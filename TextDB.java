@@ -14,7 +14,7 @@ public class TextDB {
 
     }
 
-    private static String DATABASE = "database_binary.db";
+    private static String DATABASE = "DatabaseProject.db";
 
     public static Connection conn = null;
 
@@ -250,19 +250,26 @@ public class TextDB {
     // Adds drone
     private static void addDrone(Scanner scanner) {
         System.out.print("Enter Serial Number: ");
-        String serialNumber = scanner.nextLine();
+        int serialNumber = Integer.parseInt(scanner.nextLine());
         System.out.print("Enter Name: ");
         String name = scanner.nextLine();
         System.out.print("Enter Model: ");
         String model = scanner.nextLine();
-        System.out.print("Enter Status: ");
-        String status = scanner.nextLine();
+        System.out.print("Enter Status (True-Available/False - Not Available): ");
+        boolean status = Boolean.getBoolean(scanner.nextLine());
         System.out.print("Enter Location: ");
         String location = scanner.nextLine();
-        System.out.print("Enter Weight Capacity: ");
-        double weightCapacity = scanner.nextDouble();
-        drones.add(new Drone(serialNumber, name, model, status, location,
-                weightCapacity));
+        System.out.print("Enter Manufacturer: ");
+        String manufacturer = scanner.nextLine();
+        System.out.print("Enter year: ");
+        int year = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter weight capacity: ");
+        double weightCapacity = Double.parseDouble(scanner.nextLine());
+        System.out.print("Enter Distance: ");
+        int distance = Integer.parseInt(scanner.nextLine());
+        
+        String sql = "insert into Drone (DSerialNumber, Name, Model, Status, Location, Manufacturer, Year, WeightCapacity, Distance, MaxSpeed, WarrantyExpiration) values (?,?,?,?,?,?,?,?,?,?,?)";
+        
         System.out.println("Drone added.");
     }
 
@@ -284,6 +291,9 @@ public class TextDB {
     }
 
     // Placeholder methods for rental, delivery, etc.
+    /* TODO
+     * Alex/Arjun implement these methods for customers and using the methods in SQL.java to help
+     */
     private static void rentEquipment(Scanner scanner) {
         System.out.println("Enter equipment details for renting.");
         System.out.println("Equipment rented.");
@@ -385,5 +395,12 @@ public class TextDB {
         }
         System.out.println("Equipment not found.");
     }
+    
+    /* TODO
+     * Kyle: Do those reports by calling/adding methods in sql.java.
+     * You might need to add another menu option for the reports too
+     */
+    
+    
 
 }
