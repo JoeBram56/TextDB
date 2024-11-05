@@ -255,7 +255,8 @@ public class TextDB {
         String name = scanner.nextLine();
         System.out.print("Enter Model: ");
         String model = scanner.nextLine();
-        System.out.print("Enter Status (True-Available/False - Not Available): ");
+        System.out
+                .print("Enter Status (True-Available/False - Not Available): ");
         boolean status = Boolean.getBoolean(scanner.nextLine());
         System.out.print("Enter Location: ");
         String location = scanner.nextLine();
@@ -267,9 +268,15 @@ public class TextDB {
         double weightCapacity = Double.parseDouble(scanner.nextLine());
         System.out.print("Enter Distance: ");
         int distance = Integer.parseInt(scanner.nextLine());
-        
-        String sql = "insert into Drone (DSerialNumber, Name, Model, Status, Location, Manufacturer, Year, WeightCapacity, Distance, MaxSpeed, WarrantyExpiration) values (?,?,?,?,?,?,?,?,?,?,?)";
-        
+        System.out.print("Enter MaxSpeed: ");
+        int maxSpeed = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter Warranty Expiration: ");
+        String warrantyExpiration = scanner.nextLine();
+
+        String sql = "insert into Drones (DSerialNumber, Name, Model, Status, Location, Manufacturer, Year, WeightCapacity, Distance, MaxSpeed, WarrantyExpiration) values (?,?,?,?,?,?,?,?,?,?,?)";
+        SQL.ps_add_drone(sql, serialNumber, name, model, status, location,
+                manufacturer, year, weightCapacity, distance, maxSpeed,
+                warrantyExpiration);
         System.out.println("Drone added.");
     }
 
@@ -291,8 +298,9 @@ public class TextDB {
     }
 
     // Placeholder methods for rental, delivery, etc.
-    /* TODO
-     * Alex/Arjun implement these methods for customers and using the methods in SQL.java to help
+    /*
+     * TODO Alex/Arjun implement these methods for customers and using the
+     * methods in SQL.java to help
      */
     private static void rentEquipment(Scanner scanner) {
         System.out.println("Enter equipment details for renting.");
@@ -395,12 +403,10 @@ public class TextDB {
         }
         System.out.println("Equipment not found.");
     }
-    
-    /* TODO
-     * Kyle: Do those reports by calling/adding methods in sql.java.
-     * You might need to add another menu option for the reports too
+
+    /*
+     * TODO Kyle: Do those reports by calling/adding methods in sql.java. You
+     * might need to add another menu option for the reports too
      */
-    
-    
 
 }
