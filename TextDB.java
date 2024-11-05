@@ -1,6 +1,7 @@
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -12,6 +13,10 @@ public class TextDB {
     private TextDB() {
 
     }
+
+    private static String DATABASE = "DatabaseProject.db";
+
+    public static Connection conn = null;
 
     //Holds drone data
     static class Drone {
@@ -94,6 +99,44 @@ public class TextDB {
         }
     }
 
+    /**
+     * Connects to the database if it exists, creates it if it does not, and
+     * returns the connection object.
+     *
+     * @param databaseFileName
+     *            the database file name
+     * @return a connection object to the designated database
+     */
+    public static Connection initializeDB(String databaseFileName) {
+        /**
+         * The "Connection String" or "Connection URL".
+         *
+         * "jdbc:sqlite:" is the "subprotocol". (If this were a SQL Server
+         * database it would be "jdbc:sqlserver:".)
+         */
+        String url = "jdbc:sqlite:" + databaseFileName;
+        Connection conn = null; // If you create this variable inside the Try block it will be out of scope
+        try {
+            conn = DriverManager.getConnection(url);
+            if (conn != null) {
+                // Provides some positive assurance the connection and/or creation was successful.
+                DatabaseMetaData meta = conn.getMetaData();
+                System.out
+                        .println("The driver name is " + meta.getDriverName());
+                System.out.println(
+                        "The connection to the database was successful.");
+            } else {
+                // Provides some feedback in case the connection failed but did not throw an exception.
+                System.out.println("Null Connection");
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            System.out
+                    .println("There was a problem connecting to the database.");
+        }
+        return conn;
+    }
+
     // Lists to store drones and equipment
     private static ArrayList<Drone> drones = new ArrayList<Drone>();
     private static ArrayList<Equipment> equipmentList = new ArrayList<Equipment>();
@@ -102,9 +145,7 @@ public class TextDB {
         Scanner scanner = new Scanner(System.in);
         int choice = 0;
         int user;
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rSet = null;
+        conn = initializeDB(DATABASE);
 
         System.out.print("Are you a customer or Employee?(1 - Emp/2 - Cust): ");
         user = scanner.nextInt();
@@ -198,25 +239,37 @@ public class TextDB {
             scanner.close();
             return;
         }
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
         scanner.close();
     }
 
     // Adds drone
     private static void addDrone(Scanner scanner) {
         System.out.print("Enter Serial Number: ");
-        String serialNumber = scanner.nextLine();
+        int serialNumber = Integer.parseInt(scanner.nextLine());
         System.out.print("Enter Name: ");
         String name = scanner.nextLine();
         System.out.print("Enter Model: ");
         String model = scanner.nextLine();
-        System.out.print("Enter Status: ");
-        String status = scanner.nextLine();
+        System.out.print("Enter Status (True-Available/False - Not Available): ");
+        boolean status = Boolean.getBoolean(scanner.nextLine());
         System.out.print("Enter Location: ");
         String location = scanner.nextLine();
-        System.out.print("Enter Weight Capacity: ");
-        double weightCapacity = scanner.nextDouble();
-        drones.add(new Drone(serialNumber, name, model, status, location,
-                weightCapacity));
+        System.out.print("Enter Manufacturer: ");
+        String manufacturer = scanner.nextLine();
+        System.out.print("Enter year: ");
+        int year = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter weight capacity: ");
+        double weightCapacity = Double.parseDouble(scanner.nextLine());
+        System.out.print("Enter Distance: ");
+        int distance = Integer.parseInt(scanner.nextLine());
+        
+        String sql = "insert into Drone (DSerialNumber, Name, Model, Status, Location, Manufacturer, Year, WeightCapacity, Distance, MaxSpeed, WarrantyExpiration) values (?,?,?,?,?,?,?,?,?,?,?)";
+        
         System.out.println("Drone added.");
     }
 
@@ -238,6 +291,9 @@ public class TextDB {
     }
 
     // Placeholder methods for rental, delivery, etc.
+    /* TODO
+     * Alex/Arjun implement these methods for customers and using the methods in SQL.java to help
+     */
     private static void rentEquipment(Scanner scanner) {
         System.out.println("Enter equipment details for renting.");
         System.out.println("Equipment rented.");
@@ -339,5 +395,12 @@ public class TextDB {
         }
         System.out.println("Equipment not found.");
     }
+    
+    /* TODO
+     * Kyle: Do those reports by calling/adding methods in sql.java.
+     * You might need to add another menu option for the reports too
+     */
+    
+    
 
 }
