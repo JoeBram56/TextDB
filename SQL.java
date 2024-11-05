@@ -1,10 +1,12 @@
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Random;
 
 /**
  *
@@ -95,26 +97,54 @@ public class SQL {
         }
     }
 
-        public static void ps_add_drone(String sql, int serialNumber, String name,
-            String model, boolean status, String location, String manufacturer,
-            int year, double wc, int distance, int maxSpeed, String we) {
+    public static void executeRentEquipment(String serialNumber,
+            String updateStatusSQL, String insertRentalSQL) {
 
-        try {
-            ps = TextDB.conn.prepareStatement(sql);
-            ps.setInt(1, serialNumber);
-            ps.setString(2, name);
-            ps.setString(3, model);
-            ps.setBoolean(4, status);
-            ps.setString(5, location);
-            ps.setString(6, manufacturer);
-            ps.setInt(7, year);
-            ps.setDouble(8, wc);
-            ps.setInt(9, distance);
-            ps.setInt(10, maxSpeed);
-            ps.setDate(11, Date.valueOf(we));
-            ps.executeUpdate();
+        // Generate random values
+        int userId = new Random().nextInt(1000) + 1000; // Random user ID between 1000 and 1999
+        double rentalFee = 20.0 + new Random().nextDouble() * 30.0; // Random rental fee between 20.0 and 50.0
+
+        // Dates
+        String checkOutDate = LocalDate.now()
+                .format(DateTimeFormatter.ISO_DATE);
+        String dueDate = LocalDate.now().plusDays(7)
+                .format(DateTimeFormatter.ISO_DATE);
+
+        try (Connection conn = TextDB.conn;
+                PreparedStatement ps1 = conn.prepareStatement(updateStatusSQL);
+                PreparedStatement ps2 = conn
+                        .prepareStatement(insertRentalSQL)) {
+
+            conn.setAutoCommit(false); // Begin transaction
+
+            // Update equipment status
+            ps1.setString(1, serialNumber);
+            int equipmentUpdated = ps1.executeUpdate();
+
+            if (equipmentUpdated > 0) {
+                // Insert rental record
+                ps2.setInt(1, userId);
+                ps2.setString(2, serialNumber);
+                ps2.setString(3, dueDate);
+                ps2.setString(4, checkOutDate);
+                ps2.setDouble(5, rentalFee);
+                ps2.executeUpdate();
+
+                conn.commit(); // Commit transaction
+                System.out.println("Equipment rented successfully.");
+                System.out.println("User ID: " + userId);
+                System.out.println(
+                        "Rental Fee: $" + String.format("%.2f", rentalFee));
+            } else {
+                conn.rollback(); // Roll back transaction if equipment not found
+                System.out.println(
+                        "Error: Equipment not found or already rented.");
+            }
+
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error executing rental: " + e.getMessage());
         }
+
     }
+
 }
