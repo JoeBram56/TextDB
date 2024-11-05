@@ -1,5 +1,3 @@
-package osu.cse3241.sql;
-
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -7,8 +5,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import osu.cse3241.GRS;
 
 /**
  *
@@ -94,6 +90,29 @@ public class SQL {
             }
             rs.close();
             ps.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+        public static void ps_add_drone(String sql, int serialNumber, String name,
+            String model, boolean status, String location, String manufacturer,
+            int year, double wc, int distance, int maxSpeed, String we) {
+
+        try {
+            ps = TextDB.conn.prepareStatement(sql);
+            ps.setInt(1, serialNumber);
+            ps.setString(2, name);
+            ps.setString(3, model);
+            ps.setBoolean(4, status);
+            ps.setString(5, location);
+            ps.setString(6, manufacturer);
+            ps.setInt(7, year);
+            ps.setDouble(8, wc);
+            ps.setInt(9, distance);
+            ps.setInt(10, maxSpeed);
+            ps.setDate(11, Date.valueOf(we));
+            ps.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
