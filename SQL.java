@@ -95,7 +95,7 @@ public class SQL {
         }
     }
 
-        public static void ps_add_drone(String sql, int serialNumber, String name,
+    public static void ps_add_drone(String sql, int serialNumber, String name,
             String model, boolean status, String location, String manufacturer,
             int year, double wc, int distance, int maxSpeed, String we) {
 
@@ -116,5 +116,42 @@ public class SQL {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    public static void ps_delete_drone(String sql, int s) {
+        try {
+            ps = TextDB.conn.prepareStatement(sql);
+            ps.setInt(1, s);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println("Drone deleted.");
+
+    }
+
+    public static void ps_update_drone(String sql, int s, int n) {
+
+        try {
+            ps = TextDB.conn.prepareStatement(sql);
+            ps.setInt(1, s);
+            ps.setInt(2, n);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Drone Updated");
+        }
+
+    }
+
+    public static void ps_search_drone(String sql, int n) {
+
+        try {
+            ps = TextDB.conn.prepareStatement(sql);
+            ps.setInt(1, n);
+            sqlQuery(TextDB.conn, ps);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println("Here:");
     }
 }
