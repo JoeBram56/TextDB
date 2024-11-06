@@ -325,44 +325,34 @@ public class TextDB {
     // Example: Search drones
     private static void searchDrones(Scanner scanner) {
         System.out.print("Enter Serial Number to search: ");
-        String serialNumber = scanner.nextLine();
-        for (Drone drone : drones) {
-            if (drone.getSerialNumber().equals(serialNumber)) {
-                drone.display();
-                return;
-            }
-        }
-        System.out.println("Drone not found.");
+        int serialNumber = Integer.parseInt(scanner.nextLine());
+
+        String sql = "select * from Drones where DSerialNumber = ?";
+        SQL.ps_search_drone(sql, serialNumber);
+
     }
 
     // Example: Edits a drone name (Assume full implementation will allow for
     //editing of all attributes
     private static void editDrone(Scanner scanner) {
-        System.out.print("Enter Serial Number of the drone to edit: ");
-        String serialNumber = scanner.nextLine();
-        for (Drone drone : drones) {
-            if (drone.getSerialNumber().equals(serialNumber)) {
-                System.out.print("Enter new name: ");
-                drone.setName(scanner.nextLine());
-                System.out.println("Drone updated.");
-                return;
-            }
-        }
-        System.out.println("Drone not found.");
+        System.out.print("Enter Serial Number of the drone to change status: ");
+        int oldSerialNumber = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter the new serial number: ");
+        int newNum = Integer.parseInt(scanner.nextLine());
+
+        String sql = "Update Drones set DSerialNumber = ? where DSerialNumber = ?;";
+        SQL.ps_update_drone(sql, oldSerialNumber, newNum);
+        System.out.println("Drone updated");
+
     }
 
     // Example: Delete a drone
     private static void deleteDrone(Scanner scanner) {
         System.out.print("Enter Serial Number of the drone to delete: ");
-        String serialNumber = scanner.nextLine();
-        for (int i = 0; i < drones.size(); i++) {
-            if (drones.get(i).getSerialNumber().equals(serialNumber)) {
-                drones.remove(i);
-                System.out.println("Drone deleted.");
-                return;
-            }
-        }
-        System.out.println("Drone not found.");
+        int serialNumber = Integer.parseInt(scanner.nextLine());
+
+        String sql = "Delete from Drones where DSerialNumber = ?;";
+        SQL.ps_delete_drone(sql, serialNumber);
     }
 
     private static void searchEquipment(Scanner scanner) {
