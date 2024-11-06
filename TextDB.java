@@ -268,9 +268,15 @@ public class TextDB {
         double weightCapacity = Double.parseDouble(scanner.nextLine());
         System.out.print("Enter Distance: ");
         int distance = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter MaxSpeed: ");
+        int maxSpeed = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter Warranty Expiration: ");
+        String warrantyExpiration = scanner.nextLine();
 
-        String sql = "insert into Drone (DSerialNumber, Name, Model, Status, Location, Manufacturer, Year, WeightCapacity, Distance, MaxSpeed, WarrantyExpiration) values (?,?,?,?,?,?,?,?,?,?,?)";
-
+        String sql = "insert into Drones (DSerialNumber, Name, Model, Status, Location, Manufacturer, Year, WeightCapacity, Distance, MaxSpeed, WarrantyExpiration) values (?,?,?,?,?,?,?,?,?,?,?)";
+        SQL.ps_add_drone(sql, serialNumber, name, model, status, location,
+                manufacturer, year, weightCapacity, distance, maxSpeed,
+                warrantyExpiration);
         System.out.println("Drone added.");
     }
 
@@ -297,75 +303,84 @@ public class TextDB {
      * methods in SQL.java to help
      */
     private static void rentEquipment(Scanner scanner) {
-        System.out.println("Enter equipment serial number to rent:");
+        System.out.print("Enter your user ID: ");
+        int userId = Integer.parseInt(scanner.nextLine());
+
+        System.out.print("Enter equipment serial number to rent: ");
         String serialNumber = scanner.nextLine();
 
-        String updateStatusSQL = "UPDATE Equipment SET Status = 'rented' WHERE ESerialNumber = ?";
+        String updateStatusSQL = "UPDATE Equipment SET Status = True WHERE ESerialNumber = ?";
         String insertRentalSQL = "INSERT INTO RentedBy (UserID, ESerialNumber, DueDate, CheckOutDate, RentalFee) VALUES (?, ?, ?, ?, ?)";
 
-        //        SQL.ps_InsertNewArtist(sql, id, name, dob);
-
-        SQL.executeRentEquipment(serialNumber, updateStatusSQL,
+        SQL.executeRentEquipment(serialNumber, userId, updateStatusSQL,
                 insertRentalSQL);
-
     }
 
     private static void returnEquipment(Scanner scanner) {
-        System.out.println("Enter equipment details for returning.");
-        System.out.println("Equipment returned.");
+        System.out.println("Enter equipment serial number for return:");
+        String serialNumber = scanner.nextLine();
+
+        // SQL to update equipment status to returned (false)
+        String updateStatusSQL = "UPDATE Equipment SET Status = False WHERE ESerialNumber = ?";
+
+        SQL.executeReturnEquipment(serialNumber, updateStatusSQL);
     }
 
     private static void deliverEquipment(Scanner scanner) {
-        System.out.println("Enter equipment details for delivery.");
-        System.out.println("Equipment delivered.");
+        System.out.print("Enter warehouse ID for delivery: ");
+        int warehouseId = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter equipment serial number to deliver: ");
+        String serialNumber = scanner.nextLine();
+
+        // SQL to fetch warehouse address for confirmation message
+        String fetchWarehouseSQL = "SELECT Address, City FROM Warehouse WHERE WarehouseID = ?";
+        String updateStatusSQL = "UPDATE Equipment SET Status = True, Location = ? WHERE ESerialNumber = ?";
+
+        SQL.executeDeliverEquipment(warehouseId, serialNumber,
+                fetchWarehouseSQL, updateStatusSQL);
     }
 
     private static void pickupEquipment(Scanner scanner) {
-        System.out.println("Enter equipment details for pickup.");
-        System.out.println("Equipment picked up.");
-    }
+        System.out.println(
+                "Enter equipment serial number to view pickup warehouse:");
+        String serialNumber = scanner.nextLine();
 
+        // SQL to fetch warehouse address for the specified equipment serial number
+        String fetchWarehouseSQL = "SELECT W.Address, W.City FROM Warehouse W JOIN Equipment E ON E.Location = W.WarehouseID WHERE E.ESerialNumber = ?";
+
+        SQL.executeFetchWarehouseForPickup(serialNumber, fetchWarehouseSQL);
+    }
     // Example: Search drones
     private static void searchDrones(Scanner scanner) {
         System.out.print("Enter Serial Number to search: ");
-        String serialNumber = scanner.nextLine();
-        for (Drone drone : drones) {
-            if (drone.getSerialNumber().equals(serialNumber)) {
-                drone.display();
-                return;
-            }
-        }
-        System.out.println("Drone not found.");
+        int serialNumber = Integer.parseInt(scanner.nextLine());
+
+        String sql = "select * from Drones where DSerialNumber = ?";
+        SQL.ps_search_drone(sql, serialNumber);
+
     }
 
     // Example: Edits a drone name (Assume full implementation will allow for
     //editing of all attributes
     private static void editDrone(Scanner scanner) {
-        System.out.print("Enter Serial Number of the drone to edit: ");
-        String serialNumber = scanner.nextLine();
-        for (Drone drone : drones) {
-            if (drone.getSerialNumber().equals(serialNumber)) {
-                System.out.print("Enter new name: ");
-                drone.setName(scanner.nextLine());
-                System.out.println("Drone updated.");
-                return;
-            }
-        }
-        System.out.println("Drone not found.");
+        System.out.print("Enter Serial Number of the drone to change status: ");
+        int oldSerialNumber = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter the new serial number: ");
+        int newNum = Integer.parseInt(scanner.nextLine());
+
+        String sql = "Update Drones set DSerialNumber = ? where DSerialNumber = ?;";
+        SQL.ps_update_drone(sql, oldSerialNumber, newNum);
+        System.out.println("Drone updated");
+
     }
 
     // Example: Delete a drone
     private static void deleteDrone(Scanner scanner) {
         System.out.print("Enter Serial Number of the drone to delete: ");
-        String serialNumber = scanner.nextLine();
-        for (int i = 0; i < drones.size(); i++) {
-            if (drones.get(i).getSerialNumber().equals(serialNumber)) {
-                drones.remove(i);
-                System.out.println("Drone deleted.");
-                return;
-            }
-        }
-        System.out.println("Drone not found.");
+        int serialNumber = Integer.parseInt(scanner.nextLine());
+
+        String sql = "Delete from Drones where DSerialNumber = ?;";
+        SQL.ps_delete_drone(sql, serialNumber);
     }
 
     private static void searchEquipment(Scanner scanner) {
