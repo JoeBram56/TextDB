@@ -303,25 +303,53 @@ public class TextDB {
      * methods in SQL.java to help
      */
     private static void rentEquipment(Scanner scanner) {
-        System.out.println("Enter equipment details for renting.");
-        System.out.println("Equipment rented.");
+        System.out.print("Enter your user ID: ");
+        int userId = Integer.parseInt(scanner.nextLine());
+
+        System.out.print("Enter equipment serial number to rent: ");
+        String serialNumber = scanner.nextLine();
+
+        String updateStatusSQL = "UPDATE Equipment SET Status = True WHERE ESerialNumber = ?";
+        String insertRentalSQL = "INSERT INTO RentedBy (UserID, ESerialNumber, DueDate, CheckOutDate, RentalFee) VALUES (?, ?, ?, ?, ?)";
+
+        SQL.executeRentEquipment(serialNumber, userId, updateStatusSQL,
+                insertRentalSQL);
     }
 
     private static void returnEquipment(Scanner scanner) {
-        System.out.println("Enter equipment details for returning.");
-        System.out.println("Equipment returned.");
+        System.out.println("Enter equipment serial number for return:");
+        String serialNumber = scanner.nextLine();
+
+        // SQL to update equipment status to returned (false)
+        String updateStatusSQL = "UPDATE Equipment SET Status = False WHERE ESerialNumber = ?";
+
+        SQL.executeReturnEquipment(serialNumber, updateStatusSQL);
     }
 
     private static void deliverEquipment(Scanner scanner) {
-        System.out.println("Enter equipment details for delivery.");
-        System.out.println("Equipment delivered.");
+        System.out.print("Enter warehouse ID for delivery: ");
+        int warehouseId = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter equipment serial number to deliver: ");
+        String serialNumber = scanner.nextLine();
+
+        // SQL to fetch warehouse address for confirmation message
+        String fetchWarehouseSQL = "SELECT Address, City FROM Warehouse WHERE WarehouseID = ?";
+        String updateStatusSQL = "UPDATE Equipment SET Status = True, Location = ? WHERE ESerialNumber = ?";
+
+        SQL.executeDeliverEquipment(warehouseId, serialNumber,
+                fetchWarehouseSQL, updateStatusSQL);
     }
 
     private static void pickupEquipment(Scanner scanner) {
-        System.out.println("Enter equipment details for pickup.");
-        System.out.println("Equipment picked up.");
-    }
+        System.out.println(
+                "Enter equipment serial number to view pickup warehouse:");
+        String serialNumber = scanner.nextLine();
 
+        // SQL to fetch warehouse address for the specified equipment serial number
+        String fetchWarehouseSQL = "SELECT W.Address, W.City FROM Warehouse W JOIN Equipment E ON E.Location = W.WarehouseID WHERE E.ESerialNumber = ?";
+
+        SQL.executeFetchWarehouseForPickup(serialNumber, fetchWarehouseSQL);
+    }
     // Example: Search drones
     private static void searchDrones(Scanner scanner) {
         System.out.print("Enter Serial Number to search: ");
