@@ -136,6 +136,51 @@ public class TextDB {
         }
         return conn;
     }
+    
+    private static void usefulReportsMenu(Scanner scanner) {
+        int reportChoice = 0;
+
+        while (reportChoice != 7) {
+            System.out.println("\n--- Useful Reports Menu ---");
+            System.out.println("1. Total Rentals by Member");
+            System.out.println("2. Most Popular Equipment");
+            System.out.println("3. Most Popular Manufacturer");
+            System.out.println("4. Most Used Drone");
+            System.out.println("5. Member with Most Rentals");
+            System.out.println("6. Equipment by Type Released Before Year");
+            System.out.println("7. Exit Program");
+            System.out.print("Choose a report option: ");
+            reportChoice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (reportChoice) {
+                case 1:
+                	getTotalRentedItemsByMember(scanner);
+                    break;
+                case 2:
+                	getMostPopularEquipment();
+                    break;
+                case 3:
+                	getMostPopularManufacturer();
+                    break;
+                case 4:
+                	getMostUsedDrone();
+                    break;
+                case 5:
+                    getTopRenter();
+                    break;
+                case 6:
+                    getEquipmentByTypeAndYear(scanner);
+                    break;
+                case 7:
+                    System.out.println("Returning to main menu.");
+                    break;
+                default:
+                    System.out.println("Invalid option. Please try again.");
+                    break;
+            }
+        }
+    }
 
     // Lists to store drones and equipment
     private static ArrayList<Drone> drones = new ArrayList<Drone>();
@@ -163,7 +208,8 @@ public class TextDB {
                 System.out.println("6. Edit Equipment");
                 System.out.println("7. Delete Equipment");
                 System.out.println("8. Search Equipment");
-                System.out.println("9. Exit");
+                System.out.println("9. Useful Reports");
+                System.out.println("10. Exit");
                 System.out.print("Choose an option: ");
                 choice = scanner.nextInt();
                 scanner.nextLine();
@@ -192,6 +238,9 @@ public class TextDB {
                     case 8:
                         searchEquipment(scanner);
                     case 9:
+                    	//Useful reports menu
+                    	usefulReportsMenu(scanner);
+                    case 10:
                         System.out.println("Exiting program.");
                         return;
                     //break;
@@ -255,7 +304,8 @@ public class TextDB {
         String name = scanner.nextLine();
         System.out.print("Enter Model: ");
         String model = scanner.nextLine();
-        System.out.print("Enter Status (True-Available/False - Not Available): ");
+        System.out
+                .print("Enter Status (True-Available/False - Not Available): ");
         boolean status = Boolean.getBoolean(scanner.nextLine());
         System.out.print("Enter Location: ");
         String location = scanner.nextLine();
@@ -267,9 +317,15 @@ public class TextDB {
         double weightCapacity = Double.parseDouble(scanner.nextLine());
         System.out.print("Enter Distance: ");
         int distance = Integer.parseInt(scanner.nextLine());
-        
-        String sql = "insert into Drone (DSerialNumber, Name, Model, Status, Location, Manufacturer, Year, WeightCapacity, Distance, MaxSpeed, WarrantyExpiration) values (?,?,?,?,?,?,?,?,?,?,?)";
-        
+        System.out.print("Enter MaxSpeed: ");
+        int maxSpeed = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter Warranty Expiration: ");
+        String warrantyExpiration = scanner.nextLine();
+
+        String sql = "insert into Drones (DSerialNumber, Name, Model, Status, Location, Manufacturer, Year, WeightCapacity, Distance, MaxSpeed, WarrantyExpiration) values (?,?,?,?,?,?,?,?,?,?,?)";
+        SQL.ps_add_drone(sql, serialNumber, name, model, status, location,
+                manufacturer, year, weightCapacity, distance, maxSpeed,
+                warrantyExpiration);
         System.out.println("Drone added.");
     }
 
@@ -291,70 +347,89 @@ public class TextDB {
     }
 
     // Placeholder methods for rental, delivery, etc.
-    /* TODO
-     * Alex/Arjun implement these methods for customers and using the methods in SQL.java to help
+    /*
+     * TODO Alex/Arjun implement these methods for customers and using the
+     * methods in SQL.java to help
      */
     private static void rentEquipment(Scanner scanner) {
-        System.out.println("Enter equipment details for renting.");
-        System.out.println("Equipment rented.");
+        System.out.print("Enter your user ID: ");
+        int userId = Integer.parseInt(scanner.nextLine());
+
+        System.out.print("Enter equipment serial number to rent: ");
+        String serialNumber = scanner.nextLine();
+
+        String updateStatusSQL = "UPDATE Equipment SET Status = True WHERE ESerialNumber = ?";
+        String insertRentalSQL = "INSERT INTO RentedBy (UserID, ESerialNumber, DueDate, CheckOutDate, RentalFee) VALUES (?, ?, ?, ?, ?)";
+
+        SQL.executeRentEquipment(serialNumber, userId, updateStatusSQL,
+                insertRentalSQL);
     }
 
     private static void returnEquipment(Scanner scanner) {
-        System.out.println("Enter equipment details for returning.");
-        System.out.println("Equipment returned.");
+        System.out.println("Enter equipment serial number for return:");
+        String serialNumber = scanner.nextLine();
+
+        // SQL to update equipment status to returned (false)
+        String updateStatusSQL = "UPDATE Equipment SET Status = False WHERE ESerialNumber = ?";
+
+        SQL.executeReturnEquipment(serialNumber, updateStatusSQL);
     }
 
     private static void deliverEquipment(Scanner scanner) {
-        System.out.println("Enter equipment details for delivery.");
-        System.out.println("Equipment delivered.");
+        System.out.print("Enter warehouse ID for delivery: ");
+        int warehouseId = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter equipment serial number to deliver: ");
+        String serialNumber = scanner.nextLine();
+
+        // SQL to fetch warehouse address for confirmation message
+        String fetchWarehouseSQL = "SELECT Address, City FROM Warehouse WHERE WarehouseID = ?";
+        String updateStatusSQL = "UPDATE Equipment SET Status = True, Location = ? WHERE ESerialNumber = ?";
+
+        SQL.executeDeliverEquipment(warehouseId, serialNumber,
+                fetchWarehouseSQL, updateStatusSQL);
     }
 
     private static void pickupEquipment(Scanner scanner) {
-        System.out.println("Enter equipment details for pickup.");
-        System.out.println("Equipment picked up.");
-    }
+        System.out.println(
+                "Enter equipment serial number to view pickup warehouse:");
+        String serialNumber = scanner.nextLine();
 
+        // SQL to fetch warehouse address for the specified equipment serial number
+        String fetchWarehouseSQL = "SELECT W.Address, W.City FROM Warehouse W JOIN Equipment E ON E.Location = W.WarehouseID WHERE E.ESerialNumber = ?";
+
+        SQL.executeFetchWarehouseForPickup(serialNumber, fetchWarehouseSQL);
+    }
     // Example: Search drones
     private static void searchDrones(Scanner scanner) {
         System.out.print("Enter Serial Number to search: ");
-        String serialNumber = scanner.nextLine();
-        for (Drone drone : drones) {
-            if (drone.getSerialNumber().equals(serialNumber)) {
-                drone.display();
-                return;
-            }
-        }
-        System.out.println("Drone not found.");
+        int serialNumber = Integer.parseInt(scanner.nextLine());
+
+        String sql = "select * from Drones where DSerialNumber = ?";
+        SQL.ps_search_drone(sql, serialNumber);
+
     }
 
     // Example: Edits a drone name (Assume full implementation will allow for
     //editing of all attributes
     private static void editDrone(Scanner scanner) {
-        System.out.print("Enter Serial Number of the drone to edit: ");
-        String serialNumber = scanner.nextLine();
-        for (Drone drone : drones) {
-            if (drone.getSerialNumber().equals(serialNumber)) {
-                System.out.print("Enter new name: ");
-                drone.setName(scanner.nextLine());
-                System.out.println("Drone updated.");
-                return;
-            }
-        }
-        System.out.println("Drone not found.");
+        System.out.print("Enter Serial Number of the drone to change status: ");
+        int oldSerialNumber = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter the new serial number: ");
+        int newNum = Integer.parseInt(scanner.nextLine());
+
+        String sql = "Update Drones set DSerialNumber = ? where DSerialNumber = ?;";
+        SQL.ps_update_drone(sql, oldSerialNumber, newNum);
+        System.out.println("Drone updated");
+
     }
 
     // Example: Delete a drone
     private static void deleteDrone(Scanner scanner) {
         System.out.print("Enter Serial Number of the drone to delete: ");
-        String serialNumber = scanner.nextLine();
-        for (int i = 0; i < drones.size(); i++) {
-            if (drones.get(i).getSerialNumber().equals(serialNumber)) {
-                drones.remove(i);
-                System.out.println("Drone deleted.");
-                return;
-            }
-        }
-        System.out.println("Drone not found.");
+        int serialNumber = Integer.parseInt(scanner.nextLine());
+
+        String sql = "Delete from Drones where DSerialNumber = ?;";
+        SQL.ps_delete_drone(sql, serialNumber);
     }
 
     private static void searchEquipment(Scanner scanner) {
@@ -395,12 +470,93 @@ public class TextDB {
         }
         System.out.println("Equipment not found.");
     }
-    
-    /* TODO
-     * Kyle: Do those reports by calling/adding methods in sql.java.
-     * You might need to add another menu option for the reports too
+
+    /*
+     * TODO Kyle: Do those reports by calling/adding methods in sql.java. You
+     * might need to add another menu option for the reports too
      */
     
-    
+    /*
+     * Get total number of equipment items rented by a specific member.
+     * 
+     * This method will query the database to find the total count of equipment 
+     * items rented by a single member. The member's ID will be provided by the user.
+     * 
+     * Query Source: Checkpoint #3
+     */
+    private static void getTotalRentedItemsByMember(Scanner scanner) {
+    	System.out.println("Enter a userID to see total equipment rented by a user: ");
+		int userID = Integer.parseInt(scanner.nextLine());
+		
+		String sql = "SELECT c.UserID, c.Fname, c.Lname, COUNT(r.ESerialNumber) AS TotalItemsRented FROM Customers c JOIN RentedBy r ON c.UserID = r.UserID WHERE c.UserID = ? GROUP BY c.UserID, c.Fname, c.Lname"; 
+		SQL.ps_getTotalRentedItemsByMember(sql, userID);
+    }
 
+    /*
+     * Get the most popular item based on usage.
+     * 
+     * This method calculates the most popular equipment item by considering 
+     * both the number of times it has been rented and the total renting time.
+     * 
+     * Query Source: Checkpoint #4
+     */
+    private static void getMostPopularEquipment() {
+    	String sql = "SELECT E.ESerialNumber, E.Description, COUNT(R.ESerialNumber) AS NumberOfRentals, SUM(R.DueDate - R.CheckOutDate) AS TotalRentedTime FROM Equipment AS E JOIN RentedBy AS R ON E.ESerialNumber = R.ESerialNumber GROUP BY E.ESerialNumber, E.Model ORDER BY TotalRentedTime DESC LIMIT 1"; 
+		SQL.sqlQuery(TextDB.conn, sql);
+    }
+
+    /*
+     * Get the most popular equipment manufacturer.
+     * 
+     * This method determines which manufacturer has the highest number of rented 
+     * equipment units across all members.
+     * 
+     * Query Source: Checkpoint #4
+     */
+    private static void getMostPopularManufacturer() {
+    	String sql = "SELECT e.Manufacturer, COUNT(r.ESerialNumber) AS TotalRentedItems FROM Equipment AS e JOIN RentedBy AS r ON e.ESerialNumber = r.ESerialNumber GROUP BY e.Manufacturer ORDER BY TotalRentedItems DESC LIMIT 1"; 
+		SQL.sqlQuery(TextDB.conn, sql);
+    }
+
+    /*
+     * Get the most used drone based on distance and delivery count.
+     * 
+     * This method identifies the drone with the highest combined flying distance 
+     * and number of completed deliveries.
+     * 
+     * Query Source: Checkpoint #4
+     */
+    private static void getMostUsedDrone() {
+    	String sql = "SELECT d.DSerialNumber AS DroneID, SUM(d.Distance) AS TotalMilesFlown FROM Drones AS d GROUP BY d.DSerialNumber ORDER BY TotalMilesFlown DESC LIMIT 1;"; 
+		SQL.sqlQuery(TextDB.conn, sql);
+    }
+
+    /*
+     * Get the member who has rented the most items.
+     * 
+     * This method finds the member who has rented out the highest number of 
+     * equipment items and returns the total count of their rentals.
+     * 
+     * Query Source: Checkpoint #3
+     */
+    private static void getTopRenter() {
+    	String sql = "SELECT C.UserID, COUNT(R.UserID) AS NumberOfRentals FROM Customers AS C INNER JOIN RentedBy AS R ON C.UserID = R.UserID GROUP BY C.UserID ORDER BY NumberOfRentals DESC LIMIT 1"; 
+		SQL.sqlQuery(TextDB.conn, sql);
+    }
+
+    /*
+     * Get equipment descriptions by type released before a specified year.
+     * 
+     * This method returns the descriptions (names) of all equipment of a given 
+     * type that were released before the user-specified year.
+     * 
+     * Query Source: Checkpoint #3
+     */
+    private static void getEquipmentByTypeAndYear(Scanner scanner) {
+    	System.out.println("Enter the year you would like to see equipment released before (YYYY): ");
+		int year = Integer.parseInt(scanner.nextLine());
+		
+		String sql = "SELECT Description, Type, Year FROM Equipment WHERE Year < ? ORDER BY Type"; 
+		SQL.ps_getEquipmentByTypeAndYear(sql, year);
+    }
 }
